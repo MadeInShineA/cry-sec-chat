@@ -2,22 +2,37 @@ from socket import *
 
 SERVER_ADDRESS = "vlbelintrocrypto.hevs.ch"
 SERVER_PORT = 6000
-MAGIC_BYTES = bytearray("ISC", "utf-8")
+MAGIC_BYTES = "ISC".encode("utf-8")
+CONNECTION_TYPES = ["t", "s", "i"]
+ALLOWED_COMMANDS = ["task", "pipi"]
 
 
 def main():
     s = connect()
     connection_type = input("Enter you connection type t/i/s\n")
-    while connection_type not in ["t", "s", "i"]:
+    while connection_type not in CONNECTION_TYPES:
         connection_type = input("Enter you connection type t/i/s\n")
     message = None
+    packet = None
     match connection_type:
         case "t" | "s":
-            message = get_text_message()
-            packet = get_text_packet(connection_type, message )
+            if connection_type == "t":
+                message = get_text_message()
+            else:
+                while connection_type == "s" and message not in ALLOWED_COMMANDS:
+                    print(f"Here are the allowed commands for the s type :\n\t- {"\n\t- ".join(ALLOWED_COMMANDS)}")
+                    message = get_text_message()
+            packet = get_text_packet(connection_type, message)
         case "i":
             image = get_image_message()
             packet = get_image_packet(connection_type, image)
+    s.send(packet)
+    print("Message sent")
+    # while True:
+    #     message = s.recv
+    #     if message:
+    #        header, type, message = split_received_message(message)
+
 
 
 
@@ -35,16 +50,23 @@ def get_text_message():
     message = input("Enter your message\n")
     return message
 
+# def split_received_message(message):
+#     header = message
+
 
 def get_text_packet(connection_type, message):
-    header = MAGIC_BYTES + bytearray(connection_type, "utf-8") + bytearray(message.len(), "utf-8").reverse()
-    char_byte_array = []
 
-    # TODO
-    for char in bytearray(message, "utf-8"):
-        pass
+    packet = bytearray()
+    packet += MAGIC_BYTES
+    packet += connection_type.encode("utf-8")
+    packet += len(message).to_bytes(2, byteorder="big")
 
-    return ""
+    for char in message:
+        char_bytes = char.encode("utf-32be")
+        packet += char_bytes
+
+    print(packet)
+    return packet
 
 
 
