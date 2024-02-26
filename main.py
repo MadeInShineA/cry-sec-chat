@@ -52,6 +52,7 @@ def get_text_message():
 
 # def split_received_message(message):
 #     header = message
+# TODO faire fonction pour recevoir messages serveurs
 
 
 def get_text_packet(connection_type, message):
@@ -64,7 +65,7 @@ def get_text_packet(connection_type, message):
     for char in message:
         char_bytes = char.encode("utf-32be")
         packet += char_bytes
-
+#regarder pour faire utf-8 big endian
     print(packet)
     return packet
 
