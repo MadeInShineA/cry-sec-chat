@@ -1,3 +1,4 @@
+import socket
 from socket import *
 
 SERVER_ADDRESS = "vlbelintrocrypto.hevs.ch"
@@ -6,6 +7,7 @@ MAGIC_BYTES = "ISC".encode("utf-8")
 CONNECTION_TYPES = ["t", "s", "i"]
 ALLOWED_COMMANDS = ["task", "pipi"]
 
+# TODO faire fonction pour recevoir messages serveurs
 
 def main():
     s = connect()
@@ -29,7 +31,7 @@ def main():
     s.send(packet)
     print("Message sent")
     # while True:
-    #     message = s.recv
+    #     message = s.recv(socket.MSG_DONTWAIT, 1024)
     #     if message:
     #        header, type, message = split_received_message(message)
 
@@ -50,9 +52,10 @@ def get_text_message():
     message = input("Enter your message\n")
     return message
 
+
 # def split_received_message(message):
-#     header = message
-# TODO faire fonction pour recevoir messages serveurs
+    # header
+
 
 
 def get_text_packet(connection_type, message):
@@ -63,9 +66,10 @@ def get_text_packet(connection_type, message):
     packet += len(message).to_bytes(2, byteorder="big")
 
     for char in message:
-        char_bytes = char.encode("utf-32be")
+        char_bytes = char.encode("utf-8")
         packet += char_bytes
-#regarder pour faire utf-8 big endian
+        packet += len(char_bytes).to_bytes(4, byteorder="big")
+
     print(packet)
     return packet
 
