@@ -69,6 +69,9 @@ def get_text_packet(connection_type, message):
         char_bytes = char.encode("utf-8")
         packet += char_bytes
         packet += len(char_bytes).to_bytes(4, byteorder="big")
+        # le serveur se sert de la taille des charactères pour décoder le message
+        # il va lire les 4 bytes du premier char et en se basant sur le len du char,
+        # il reconnait le char, en gros, ça facilite le décryptage du côté du serveur
 
     print(packet)
     return packet
