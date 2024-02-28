@@ -1,5 +1,8 @@
 from socket import *
 import inspect
+from PIL import Image
+from skimage.transform import resize
+import matplotlib.pyplot as plt
 
 SERVER_ADDRESS = "vlbelintrocrypto.hevs.ch"
 SERVER_PORT = 6000
@@ -32,12 +35,13 @@ def main():
                 while connection_type == "s" and message is None:
                     print("Here are the allowed commands for the s type :")
                     # Print the allowed commands and their arguments (using the inspect module to get the source code of the lambda functions)
-                    for(allowed_command, allowed_arguments) in ALLOWED_COMMANDS_ARGUMENTS.items():
+                    for (allowed_command, allowed_arguments) in ALLOWED_COMMANDS_ARGUMENTS.items():
                         print(f"\t{allowed_command}", end=" ")
                         for arg in allowed_arguments:
                             if callable(arg):
                                 # Print the source code of the lambda function without the new line character and the comma in case it's not the last argument
-                                print(inspect.getsourcelines(arg)[0][0].strip(" ").replace("\n", "").replace(",", ""), end=" ")
+                                print(inspect.getsourcelines(arg)[0][0].strip(" ").replace("\n", "").replace(",", ""),
+                                      end=" ")
                             else:
                                 print(f"{arg}", end=" ")
                         # Print a new line character to break the " " end argument and go to the next line
@@ -100,7 +104,6 @@ def get_text_message():
 
 
 def get_text_packet(connection_type, message):
-
     packet = bytearray()
     packet += MAGIC_BYTES
     packet += connection_type.encode("utf-8")
@@ -124,6 +127,19 @@ def get_image_packet(connection_type, image):
     packet = bytearray()
     packet += MAGIC_BYTES
     packet += connection_type.encode("utf-8")
+    # reading of an image from the path
+    im = Image.open(image)
+    #resizing of the image while keeping dimensions
+    im.thumbnail((128, 128))
+    width, height = im.size
+    packet += width
+    packet += height
+    #recupering RGB code for each pixels
+    pixels = im.load()
+    for col in range(width):
+        for line in range(height):
+            red, green, blue = pixels[col,line]
+            packet += red << 16 | green << 8 | blue
 
     return packet
 
@@ -136,7 +152,5 @@ def split_received_message(message):
     return header, type, length, message
 
 
-
 if __name__ == "__main__":
     main()
-
