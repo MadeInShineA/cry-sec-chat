@@ -1,8 +1,8 @@
 from socket import *
 import inspect
 from PIL import Image
-from skimage.transform import resize
-import matplotlib.pyplot as plt
+# from skimage.transform import resize
+# import matplotlib.pyplot as plt
 
 SERVER_ADDRESS = "vlbelintrocrypto.hevs.ch"
 SERVER_PORT = 6000
@@ -31,15 +31,24 @@ def main():
                 message = get_text_message()
             else:
                 # Handle the case when the connection type is s => server
-                # We need to ask the user for the command and the arguments as long as they are not conformed to what the server expects
+                """
+                We need to ask the user for the command and the arguments
+                as long as they are not conformed to what the server expects
+                """
                 while connection_type == "s" and message is None:
                     print("Here are the allowed commands for the s type :")
-                    # Print the allowed commands and their arguments (using the inspect module to get the source code of the lambda functions)
+                    """
+                    Print the allowed commands and their arguments
+                    (using the inspect module to get the source code of the lambda functions)
+                    """
                     for (allowed_command, allowed_arguments) in ALLOWED_COMMANDS_ARGUMENTS.items():
                         print(f"\t{allowed_command}", end=" ")
                         for arg in allowed_arguments:
                             if callable(arg):
-                                # Print the source code of the lambda function without the new line character and the comma in case it's not the last argument
+                                """
+                                # Print the source code of the lambda function without the new line character
+                                and the comma in case it's not the last argument
+                                """
                                 print(inspect.getsourcelines(arg)[0][0].strip(" ").replace("\n", "").replace(",", ""),
                                       end=" ")
                             else:
@@ -116,10 +125,12 @@ def get_text_packet(connection_type, message):
         padding_needed = 4 - len(char_bytes)
         char_bytes = b"\x00" * padding_needed + char_bytes
         packet += char_bytes
+        """
         # packet += len(char_bytes).to_bytes(4, byteorder="big")
         # le serveur se sert de la taille des charactères pour décoder le message
         # il va lire les 4 bytes du premier char et en se basant sur le len du char,
         # il reconnait le char, en gros, ça facilite le décryptage du côté du serveur
+        """
     return packet
 
 
@@ -129,17 +140,26 @@ def get_image_packet(connection_type, image):
     packet += connection_type.encode("utf-8")
     # reading of an image from the path
     im = Image.open(image)
-    #resizing of the image while keeping dimensions
+    # resizing of the image while keeping dimensions
     im.thumbnail((128, 128))
     width, height = im.size
-    packet += width
-    packet += height
-    #recupering RGB code for each pixels
-    pixels = im.load()
-    for col in range(width):
-        for line in range(height):
-            red, green, blue = pixels[col,line]
-            packet += red << 16 | green << 8 | blue
+    packet += width.to_bytes(2, "little")
+    packet += height.to_bytes(2, "little")
+    # recupering RGB code for each pixels
+    # pixels = im.load()
+    rgb_im = im.convert('RGB')
+    for line in range(width):
+        for col in range(height):
+            red, green, blue = rgb_im.getpixel((line, col))
+            """
+            Divmod divise les valeurs de rouge, vert et bleu par 256, le résultat devient le byte de point fort
+                et le reste devient le byte de point faible.
+            Le résultat est ensuite transformer en bytearray via une boucle for qui convertit chaques
+                valeurs en byte.
+            """
+            r, g1 = divmod(red, 256)
+            r, g2 = divmod(green, 256)
+            packet = bytes([int(b) for b in (r, g2, g1, blue)])
 
     return packet
 
