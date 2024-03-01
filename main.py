@@ -180,3 +180,4 @@ def split_received_message(message):
 if __name__ == "__main__":
     main()
 
+pipi = "caca"
