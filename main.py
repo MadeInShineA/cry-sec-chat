@@ -19,15 +19,15 @@ ALLOWED_COMMANDS_ARGUMENTS = {
 
 def main():
     s = connect()
-    connection_type = input("Enter you connection type t/i/s\n")
-    while connection_type not in CONNECTION_TYPES:
-        connection_type = input("Enter you connection type t/i/s\n")
+    message_type = input("Enter you connection type t/i/s\n")
+    while message_type not in CONNECTION_TYPES:
+        message_type = input("Enter you connection type t/i/s\n")
     message = None
     packet = None
-    match connection_type:
+    match message_type:
         case "t" | "s":
             # Handle the case when the connection type is t => text
-            if connection_type == "t":
+            if message_type == "t":
                 message = get_text_message()
             else:
                 # Handle the case when the connection type is s => server
@@ -35,7 +35,7 @@ def main():
                 We need to ask the user for the command and the arguments
                 as long as they are not conformed to what the server expects
                 """
-                while connection_type == "s" and message is None:
+                while message_type == "s" and message is None:
                     print("Here are the allowed commands for the s type :")
                     """
                     Print the allowed commands and their arguments
@@ -79,19 +79,19 @@ def main():
                                 elif arg not in ALLOWED_COMMANDS_ARGUMENTS[command][i]:
                                     print(f"Argument not allowed : {arg}")
                                     message = None
-            packet = get_text_packet(connection_type, message)
+            packet = get_text_packet(message_type, message)
         case "i":
             image = get_image_message()
-            packet = get_image_packet(connection_type, image)
+            packet = get_image_packet(message_type, image)
     s.send(packet)
     print("Message sent")
     while True:
         message = s.recv(1024)
         if message:
             print("Message received")
-            header, type, length, message = split_received_message(message)
+            header, message_type, length, message = split_received_message(message)
             print(f"Received header : {header}")
-            print(f"Received type : {type}")
+            print(f"Received type : {message_type}")
             print(f"Received length : {length}")
             print(f"Received message : {message}")
 
@@ -166,11 +166,13 @@ def get_image_packet(connection_type, image):
 
 def split_received_message(message):
     header = message[:3].decode("utf-8")
-    type = chr(message[3])
+    message_type = chr(message[3])
     length = int.from_bytes(message[4:6])
     message = message[6:].decode("utf-8")
-    return header, type, length, message
+    return header, message_type, length, message
+
 
 
 if __name__ == "__main__":
     main()
+
