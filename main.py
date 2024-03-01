@@ -164,11 +164,17 @@ def get_image_packet(connection_type, image):
 
 
 def split_received_message(message):
-    header = message[:3].decode("utf-8")
-    message_type = chr(message[3])
-    length = int.from_bytes(message[4:6])
-    message = message[6:].decode("utf-8")
-    return header, message_type, length, message
+    try:
+        header = message[:3].decode("utf-8")
+        message_type = chr(message[3])
+        length = int.from_bytes(message[4:6])
+        message_bytes = message[6:]
+        print(message_bytes)
+        message = message[6:].decode("utf-8")
+
+        return header, message_type, length, message
+    except Exception:
+        print(f"Erreur lors du décodage du message {message}")
 
 
 if __name__ == "__main__":
