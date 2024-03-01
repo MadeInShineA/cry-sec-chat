@@ -1,6 +1,9 @@
 from socket import *
 import inspect
 from PIL import Image
+
+import shift
+
 # from skimage.transform import resize
 # import matplotlib.pyplot as plt
 
@@ -19,6 +22,7 @@ ALLOWED_COMMANDS_ARGUMENTS = {
 
 def main():
     s = connect()
+    message_counter = 0
     message_type = input("Enter you connection type t/i/s\n")
     while message_type not in CONNECTION_TYPES:
         message_type = input("Enter you connection type t/i/s\n")
@@ -89,11 +93,28 @@ def main():
         message = s.recv(1024)
         if message:
             print("Message received")
-            header, message_type, length, message = split_received_message(message)
+            header, message_type, length, message_bytes = split_received_message(message)
             print(f"Received header : {header}")
             print(f"Received type : {message_type}")
             print(f"Received length : {length}")
-            print(f"Received message : {message}")
+            print(f"Received message bytes: {message_bytes}")
+
+            # TODO Upgrade the way of handling server's messages handling (atm only works for s shift decrypt
+            if message_counter == 0:
+                print(f"Received message : {message_bytes.decode("utf-8")}")
+                message_counter += 1
+            elif message_counter == 1:
+                key_e, decrypted_message_e, key_space, decrypted_message_space = shift.decrypt(message_bytes)
+                print(f"Decrypted message e : {decrypted_message_e}")
+                print(f"Decrypted message space : {decrypted_message_space}")
+                if decrypted_message_e != "":
+                    s.send(get_text_packet("s", str(key_e)))
+                elif decrypted_message_space != "":
+                    s.send(get_text_packet("s", str(key_space)))
+                message_counter = 0
+
+
+
 
 
 def connect():
@@ -169,12 +190,10 @@ def split_received_message(message):
         message_type = chr(message[3])
         length = int.from_bytes(message[4:6])
         message_bytes = message[6:]
-        print(message_bytes)
-        message = message[6:].decode("utf-8")
 
-        return header, message_type, length, message
-    except Exception:
-        print(f"Erreur lors du décodage du message {message}")
+        return header, message_type, length, message_bytes
+    except Exception as e:
+        print(f"Erreur lors du décodage du message {message} \n {e}")
 
 
 if __name__ == "__main__":
