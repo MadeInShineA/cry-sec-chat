@@ -120,7 +120,6 @@ def get_text_packet(connection_type, message):
 
     for char in message:
         # Encode the char in utf-8 on 4 bytes in big endian
-        # char_bytes = char.encode("utf-32be")
         char_bytes = char.encode("utf-8")
         padding_needed = 4 - len(char_bytes)
         char_bytes = b"\x00" * padding_needed + char_bytes
@@ -170,7 +169,6 @@ def split_received_message(message):
     length = int.from_bytes(message[4:6])
     message = message[6:].decode("utf-8")
     return header, message_type, length, message
-
 
 
 if __name__ == "__main__":
