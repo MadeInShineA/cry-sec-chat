@@ -5,8 +5,13 @@ import utils
 MOST_FREQUENT_LANGUAGE_LETTER = 'e'
 COUNTER = 0
 
-
+# TODO encode_bytes_message
 def encode(message, key):
+    """
+    :param message: Byte
+    :param key: Int
+    :return: String
+    """
     res = ""
     for char in message:
         res += chr(ord(char) + key)
@@ -49,8 +54,8 @@ def decode(message, key):
 
 def decrypt(message):
     """
-    : param message: bytes
-    : return: int
+    :param message: bytes
+    :return: int
     """
 
     frequency_map = {}
