@@ -3,6 +3,7 @@ import inspect
 from PIL import Image
 
 import shift
+import vigenere
 
 # from skimage.transform import resize
 # import matplotlib.pyplot as plt
@@ -100,17 +101,38 @@ def main():
             print(f"Received message bytes: {message_bytes}")
 
             # TODO Upgrade the way of handling server's messages handling (atm only works for s shift decrypt
-            if message_counter == 0:
-                print(f"Received message : {message_bytes.decode("utf-8")}")
+            if message_counter == 0 and message_type == "s":
+                message_string = message_bytes.decode("utf-8")
+                message_string_striped = message_string.replace(chr(0), "")
+                print(f"Received message : {message_string_striped}")
                 message_counter += 1
+
+                encoding_key = message_string_striped[message_string_striped.find("shift-key ") + len("shift-key "):]
+                print(f"Received key : {encoding_key}")
             elif message_counter == 1:
-                key_e, decrypted_message_e, key_space, decrypted_message_space = shift.decrypt(message_bytes)
-                print(f"Decrypted message e : {decrypted_message_e}")
-                print(f"Decrypted message space : {decrypted_message_space}")
-                if decrypted_message_e != "":
-                    s.send(get_text_packet("s", str(key_e)))
-                elif decrypted_message_space != "":
-                    s.send(get_text_packet("s", str(key_space)))
+
+                # Shift decode
+                # key_e, decrypted_message_e, key_space, decrypted_message_space = shift.decrypt(message_bytes)
+                # print(f"Decrypted message e : {decrypted_message_e}")
+                # print(f"Decrypted message space : {decrypted_message_space}")
+                # if decrypted_message_e != "":
+                #     s.send(get_text_packet("s", str(key_e)))
+                # elif decrypted_message_space != "":
+                #     s.send(get_text_packet("s", str(key_space)))
+
+                # Shift encode
+                #
+                # encoded_message_bytes = shift.encode_bytes_message(message_bytes, int(encoding_key))
+                # packet = get_text_packet_from_message_bytes("s", encoded_message_bytes)
+                # print(packet)
+                # s.send(packet)
+
+
+                # Vigenere encode
+                encoded_message_bytes = vigenere.encode_bytes_message(message_bytes, encoding_key)
+                packet = get_text_packet_from_message_bytes("s", encoded_message_bytes)
+                print(packet)
+                s.send(packet)
                 message_counter = 0
 
 
@@ -151,6 +173,16 @@ def get_text_packet(connection_type, message):
         # il va lire les 4 bytes du premier char et en se basant sur le len du char,
         # il reconnait le char, en gros, ça facilite le décryptage du côté du serveur
         """
+    return packet
+
+
+def get_text_packet_from_message_bytes(connection_type, message):
+    packet = bytearray()
+    packet += MAGIC_BYTES
+    packet += connection_type.encode("utf-8")
+    packet += (len(message) // 4).to_bytes(2, byteorder="big")
+
+    packet += message
     return packet
 
 

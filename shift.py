@@ -5,13 +5,31 @@ import utils
 MOST_FREQUENT_LANGUAGE_LETTER = 'e'
 COUNTER = 0
 
-# TODO encode_bytes_message
-def encode(message, key):
+
+def encode_bytes_message(message, key):
     """
-    :param message: Byte
-    :param key: Int
-    :return: String
+
+    :param message: bytes
+    :param key: int
+    :return: bytearray
     """
+    res = bytearray()
+    message_4_bytes_array = utils.message_to_4_bytes_array(message)
+    for four_bytes in message_4_bytes_array:
+        encoded_char_int = int.from_bytes(four_bytes) + key
+
+        print(f"Encoded 4 bytes {four_bytes} ")
+        print(f"Encoded 4 bytes int {int.from_bytes(four_bytes)} ")
+        print(f"Key {key}")
+        encoded_char_bytes = encoded_char_int.to_bytes(4, byteorder="big")
+        print(f"Encoded char bytes {encoded_char_bytes}")
+
+        res += encoded_char_bytes
+
+    return res
+
+
+def encode_string_message(message, key):
     res = ""
     for char in message:
         res += chr(ord(char) + key)
@@ -54,8 +72,8 @@ def decode(message, key):
 
 def decrypt(message):
     """
-    :param message: bytes
-    :return: int
+    : param message: bytes
+    : return: int
     """
 
     frequency_map = {}
@@ -104,6 +122,6 @@ def decrypt(message):
 
 
 if __name__ == '__main__':
-    print(decode(encode("ñ", 1), 1))
+    print(decode(encode_string_message("ñ", 1), 1))
     print(decode([b"\x00\xc3\xb4"], 3))
 
