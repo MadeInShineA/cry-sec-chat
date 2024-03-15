@@ -15,13 +15,13 @@ def encode_bytes_message(message, key):
     for four_bytes in message_4_bytes_array:
         encoded_char_int = int.from_bytes(four_bytes) + ord(key[key_index])
 
-        print(f"Encoded 4 bytes {four_bytes} ")
-        print(f"Encoded 4 bytes int {int.from_bytes(four_bytes)} ")
-        print(f"Key char {key[key_index]}")
-        print(f"Ord Key char {ord(key[key_index])}")
+        # print(f"Encoded 4 bytes {four_bytes} ")
+        # print(f"Encoded 4 bytes int {int.from_bytes(four_bytes)} ")
+        # print(f"Key char {key[key_index]}")
+        # print(f"Ord Key char {ord(key[key_index])}")
 
         encoded_char_bytes = encoded_char_int.to_bytes(4, byteorder="big")
-        print(f"Encoded char bytes {encoded_char_bytes}")
+        # print(f"Encoded char bytes {encoded_char_bytes}")
 
 
         res += encoded_char_bytes

@@ -2,6 +2,7 @@ from socket import *
 import inspect
 from PIL import Image
 
+import RSA
 import shift
 import vigenere
 
@@ -22,6 +23,7 @@ ALLOWED_COMMANDS_ARGUMENTS = {
 
 
 def main():
+    global e, n
     s = connect()
     message_counter = 0
     message_type = input("Enter you connection type t/i/s\n")
@@ -129,11 +131,21 @@ def main():
 
 
                 # Vigenere encode
-                encoded_message_bytes = vigenere.encode_bytes_message(message_bytes, encoding_key)
-                packet = get_text_packet_from_message_bytes("s", encoded_message_bytes)
-                print(packet)
-                s.send(packet)
-                message_counter = 0
+                # encoded_message_bytes = vigenere.encode_bytes_message(message_bytes, encoding_key)
+                # packet = get_text_packet_from_message_bytes("s", encoded_message_bytes)
+                # print(packet)
+                # s.send(packet)
+                # message_counter = 0
+
+                # RSA encode
+                # encoded_message_bytes = RSA.encode_bytes_message(message_bytes, e, n)
+                # packet = get_text_packet_from_message_bytes("s", encoded_message_bytes)
+                # s.send(packet)
+                # message_counter = 0
+
+                # RSA decode
+
+                pass
 
 
 
