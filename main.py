@@ -86,7 +86,7 @@ def main():
                                 elif arg not in ALLOWED_COMMANDS_ARGUMENTS[command][i]:
                                     print(f"Argument not allowed : {arg}")
                                     message = None
-            packet = get_text_packet(message_type, message)
+            packet = get_text_packet_from_message_string(message_type, message)
         case "i":
             image = get_image_message()
             packet = get_image_packet(message_type, image)
@@ -109,8 +109,26 @@ def main():
                 print(f"Received message : {message_string_striped}")
                 message_counter += 1
 
-                encoding_key = message_string_striped[message_string_striped.find("shift-key ") + len("shift-key "):]
-                print(f"Received key : {encoding_key}")
+                # Shift and Vigenere key for encoding
+                # encoding_key = message_string_striped[message_string_striped.find("shift-key ") + len("shift-key "):]
+                # print(f"Received key : {encoding_key}")
+
+                # RSA e and n parsing for encoding
+                # e = message_string_striped[message_string_striped.find("e=") + len("e="):]
+                # e = int(e)
+                # n = message_string_striped[message_string_striped.find("n=") + len("n="):]
+                # n = n.split(',')[0]
+                # n = int(n)
+
+
+                # RSA decode
+                n, e, k = RSA.get_n_e_k()
+                packet = get_text_packet_from_message_string("s", f"{n},{e}")
+                s.send(packet)
+
+
+
+
             elif message_counter == 1:
 
                 # Shift decode
@@ -144,6 +162,11 @@ def main():
                 # message_counter = 0
 
                 # RSA decode
+                decoded_message_bytes = RSA.decode(message_bytes, n, e, k)
+                packet = get_text_packet_from_message_bytes("s", decoded_message_bytes)
+                s.send(packet)
+                message_counter = 0
+
 
                 pass
 
@@ -167,7 +190,7 @@ def get_text_message():
     return message
 
 
-def get_text_packet(connection_type, message):
+def get_text_packet_from_message_string(connection_type, message):
     packet = bytearray()
     packet += MAGIC_BYTES
     packet += connection_type.encode("utf-8")

@@ -1,6 +1,11 @@
+import math
 import random
 
+import numpy as np
+
 from utils import message_to_4_bytes_array
+
+PRIME_BYTE_SIZE = 6
 
 
 def modular_pow(base, exponent, modulo):
@@ -16,28 +21,69 @@ def modular_pow(base, exponent, modulo):
     return result
 
 
-def primesInRange():
-    prime_list = []
-    for n in range(2**31, 2**32):
-        isPrime = True
+def store_primes():
+    """
+    Store primes number between 1 to n number in a .bin file
+    The bytes are stored in little endian
 
-        for num in range(2, n):
-            if n % num == 0:
-                isPrime = False
+    :return: filname.bin
+    """
+    max_value = int(math.pow(2, 32))
+    prime_numbers = get_primes(max_value)
+    with open("primes.bin", "wb") as file:
+        for prime in prime_numbers:
+            prime_bytes = prime.tobytes()
+            stripped_prime_bytes = prime_bytes[:PRIME_BYTE_SIZE]
 
-        if isPrime:
-            prime_list.append(n)
-            print(prime_list)
-
-    return prime_list
+            # Warning, the bytes are stored in little endian
+            file.write(stripped_prime_bytes)
 
 
-def keys_creation():
-    prime_list = primesInRange()
-    n = random.choice(prime_list)
-    e = random.choice(prime_list)
+def get_primes(n):
+    """
+    :param n: Int
+    :return: list
+    """
+    sieve = np.ones(n // 3 + (n % 6 == 2), dtype=bool)
+    for i in range(1, int(n ** 0.5) // 3 + 1):
+        if sieve[i]:
+            k = 3 * i + 1 | 1
+            sieve[k * k // 3::2 * k] = False
+            sieve[k * (k - 2 * (i & 1) + 4) // 3::2 * k] = False
+    return np.r_[2, 3, ((3 * np.nonzero(sieve)[0][1:] + 1) | 1)]
 
-    print(f"key n: {n}, key e: {e}")
+
+def get_n_e_k():
+    """
+    :return n: Int
+    :return e: Int
+    """
+    with open("primes.bin", "rb") as file:
+        primes = file.readlines()[0]
+        primes_array = [primes[i:i+6] for i in range(0, len(primes), 6)]
+        primes_array = [int.from_bytes(prime, "little") for prime in primes_array]
+
+        p_index = random.randint(0, len(primes_array))
+
+        p = primes_array[p_index]
+        q = primes_array[random.randint(0, len(primes_array) - 1)]
+
+        while p == 2 and q == 2:
+            p = primes_array[p_index]
+            q = primes_array[random.randint(0, len(primes_array) - 1)]
+
+        n = p * q
+        k = (p - 1) * (q - 1)
+
+        e = primes_array[random.randint(0, p_index - 1)]
+        while math.gcd(e, k) != 1:
+            e = int(primes_array[random.randint(0, p_index)])
+
+        file.close()
+
+    return n, e, k
+
+
 
 
 def encode_bytes_message(message, key_e, key_n):
@@ -49,10 +95,28 @@ def encode_bytes_message(message, key_e, key_n):
         res += encode_char_bytes
     return res
 
+def extended_euclide_alg(e, k):
+    if k == 0:
+        return e, 1, 0
+    else:
+        d, u, v = extended_euclide_alg(k, e % k)
+        return d, v, u - v * (e // k)
 
-def decode():
-    pass
+
+
+
+def decode(message, n, e, k):
+    d, u, v = extended_euclide_alg(e, k)
+    if u < 0:
+        u += k
+    res = bytearray()
+    message_4_bytes_array = message_to_4_bytes_array(message)
+
+    for four_byte in message_4_bytes_array:
+        res += modular_pow(int.from_bytes(four_byte), u, n).to_bytes(4, byteorder="big")
+
+    return res
 
 
 if __name__ == '__main__':
-    print(keys_creation())
+    pass
