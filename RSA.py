@@ -11,10 +11,10 @@ PRIME_BYTE_SIZE = 6
 def modular_pow(base, exponent, modulo):
     """
 
-    :param base: Int
-    :param exponent: Int
-    :param modulo: Int
-    :return: Int
+    :param base: int
+    :param exponent: int
+    :param modulo: int
+    :return: int
     """
     if modulo == 1:
         return 0
@@ -33,7 +33,7 @@ def store_primes():
     Store primes number between 1 to n number in a .bin file
     The bytes are stored in little endian
 
-    :return: filname.bin
+    :return: none
     """
     max_value = int(math.pow(2, 32))
     prime_numbers = get_primes(max_value)
@@ -48,8 +48,9 @@ def store_primes():
 
 def get_primes(n):
     """
-    :param n: Int
-    :return: list
+    Returns an array of primes from 1 to 2^n
+    :param n: int
+    :return: array
     """
     sieve = np.ones(n // 3 + (n % 6 == 2), dtype=bool)
     for i in range(1, int(n ** 0.5) // 3 + 1):
@@ -62,8 +63,9 @@ def get_primes(n):
 
 def get_n_e_k():
     """
-    :return n: Int
-    :return e: Int
+    Returns n e and k used for the decoding
+    :return n: int
+    :return e: int
     """
     with open("primes.bin", "rb") as file:
         primes = file.readlines()[0]
@@ -91,24 +93,29 @@ def get_n_e_k():
     return n, e, k
 
 
-
-
-def encode_bytes_message(message, key_e, key_n):
+def encode_bytes_message(message, e, n):
     """
-    :param message: Byte
-    :param key_e: Int
-    :param key_n: Int
+    Encode the bytes message using the RSA encoding
+    :param message: bytes
+    :param e: int
+    :param n: int
     :return: bytearray
     """
     res = bytearray()
     message_4_bytes_array = message_to_4_bytes_array(message)
     for four_bytes in message_4_bytes_array:
-        z = modular_pow(int.from_bytes(four_bytes), key_e, key_n)
+        z = modular_pow(int.from_bytes(four_bytes), e, n)
         encode_char_bytes = z.to_bytes(4, "big")
         res += encode_char_bytes
     return res
 
+
 def extended_euclide_alg(e, k):
+    """
+    :param e: int
+    :param k: int
+    :return: int, int, int
+    """
     if k == 0:
         return e, 1, 0
     else:
@@ -116,9 +123,15 @@ def extended_euclide_alg(e, k):
         return d, v, u - v * (e // k)
 
 
-
-
 def decode(message, n, e, k):
+    """
+
+    :param message: bytes
+    :param n: int
+    :param e: int
+    :param k: int
+    :return: bytearray
+    """
     d, u, v = extended_euclide_alg(e, k)
     if u < 0:
         u += k
@@ -132,4 +145,4 @@ def decode(message, n, e, k):
 
 
 if __name__ == '__main__':
-    pass
+    store_primes()
