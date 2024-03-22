@@ -9,6 +9,13 @@ PRIME_BYTE_SIZE = 6
 
 
 def modular_pow(base, exponent, modulo):
+    """
+
+    :param base: Int
+    :param exponent: Int
+    :param modulo: Int
+    :return: Int
+    """
     if modulo == 1:
         return 0
     base = base % modulo
@@ -87,6 +94,12 @@ def get_n_e_k():
 
 
 def encode_bytes_message(message, key_e, key_n):
+    """
+    :param message: Byte
+    :param key_e: Int
+    :param key_n: Int
+    :return: bytearray
+    """
     res = bytearray()
     message_4_bytes_array = message_to_4_bytes_array(message)
     for four_bytes in message_4_bytes_array:
