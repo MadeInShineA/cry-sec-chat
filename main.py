@@ -15,7 +15,7 @@ MAGIC_BYTES = "ISC".encode("utf-8")
 CONNECTION_TYPES = ["t", "s", "i"]
 ALLOWED_COMMANDS_ARGUMENTS = {
     "task": [
-        ["shift", "vigenere", "RSA"],
+        ["shift", "vigenere", "RSA", "DifHel"],
         ["encode", "decode"],
         lambda x: 0 < int(x) < 10000,
     ]
@@ -72,20 +72,20 @@ def main():
                     else:
                         arguments = message.split(" ")[1:]
                         # Check if the number of arguments is correct
-                        if len(arguments) != len(ALLOWED_COMMANDS_ARGUMENTS[command]):
-                            print("Wrong number of arguments")
-                            message = None
-                        else:
-                            for i, arg in enumerate(arguments):
-                                # Check if the argument is callable (a lambda function)
-                                if callable(ALLOWED_COMMANDS_ARGUMENTS[command][i]):
-                                    if not ALLOWED_COMMANDS_ARGUMENTS[command][i](arg):
-                                        print(f"Argument not allowed : {arg}")
-                                        message = None
-                                # Check if the argument is in the allowed arguments
-                                elif arg not in ALLOWED_COMMANDS_ARGUMENTS[command][i]:
-                                    print(f"Argument not allowed : {arg}")
-                                    message = None
+                        # if len(arguments) != len(ALLOWED_COMMANDS_ARGUMENTS[command]):
+                        #     print("Wrong number of arguments")
+                        #     message = None
+                        # else:
+                        #     for i, arg in enumerate(arguments):
+                        #         # Check if the argument is callable (a lambda function)
+                        #         if callable(ALLOWED_COMMANDS_ARGUMENTS[command][i]):
+                        #             if not ALLOWED_COMMANDS_ARGUMENTS[command][i](arg):
+                        #                 print(f"Argument not allowed : {arg}")
+                        #                 message = None
+                        #         # Check if the argument is in the allowed arguments
+                        #         elif arg not in ALLOWED_COMMANDS_ARGUMENTS[command][i]:
+                        #             print(f"Argument not allowed : {arg}")
+                        #             message = None
             packet = get_text_packet_from_message_string(message_type, message)
         case "i":
             image = get_image_message()
@@ -102,7 +102,7 @@ def main():
             print(f"Received length : {length}")
             print(f"Received message bytes: {message_bytes}")
 
-            # TODO Upgrade the way of handling server's messages handling (atm only works for s shift decrypt
+            # TODO Upgrade the way of handling server's messages handling (atm only works for s shift decrypt)
             if message_counter == 0 and message_type == "s":
                 message_string = message_bytes.decode("utf-8")
                 message_string_striped = message_string.replace(chr(0), "")
@@ -114,17 +114,16 @@ def main():
                 # print(f"Received key : {encoding_key}")
 
                 # RSA e and n parsing for encoding
-                e = message_string_striped[message_string_striped.find("e=") + len("e="):]
-                e = int(e)
-                n = message_string_striped[message_string_striped.find("n=") + len("n="):]
-                n = n.split(',')[0]
-                n = int(n)
-
+                # e = message_string_striped[message_string_striped.find("e=") + len("e="):]
+                # e = int(e)
+                # n = message_string_striped[message_string_striped.find("n=") + len("n="):]
+                # n = n.split(',')[0]
+                # n = int(n)
 
                 # RSA decode
-                # n, e, k = RSA.get_n_e_k()
-                # packet = get_text_packet_from_message_string("s", f"{n},{e}")
-                # s.send(packet)
+                n, e, k = RSA.get_n_e_k()
+                packet = get_text_packet_from_message_string("s", f"{n},{e}")
+                s.send(packet)
 
 
 
@@ -147,7 +146,6 @@ def main():
                 # print(packet)
                 # s.send(packet)
 
-
                 # Vigenere encode
                 # encoded_message_bytes = vigenere.encode_bytes_message(message_bytes, encoding_key)
                 # packet = get_text_packet_from_message_bytes("s", encoded_message_bytes)
@@ -156,10 +154,10 @@ def main():
                 # message_counter = 0
 
                 # RSA encode
-                encoded_message_bytes = RSA.encode_bytes_message(message_bytes, e, n)
-                packet = get_text_packet_from_message_bytes("s", encoded_message_bytes)
-                s.send(packet)
-                message_counter = 0
+                # encoded_message_bytes = RSA.encode_bytes_message(message_bytes, e, n)
+                # packet = get_text_packet_from_message_bytes("s", encoded_message_bytes)
+                # s.send(packet)
+                # message_counter = 0
 
                 # RSA decode
                 # decoded_message_bytes = RSA.decode(message_bytes, n, e, k)
@@ -167,11 +165,7 @@ def main():
                 # s.send(packet)
                 # message_counter = 0
 
-
                 pass
-
-
-
 
 
 def connect():
@@ -265,4 +259,3 @@ def split_received_message(message):
 
 if __name__ == "__main__":
     main()
-
