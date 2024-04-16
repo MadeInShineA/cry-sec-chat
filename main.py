@@ -114,17 +114,17 @@ def main():
                 # print(f"Received key : {encoding_key}")
 
                 # RSA e and n parsing for encoding
-                # e = message_string_striped[message_string_striped.find("e=") + len("e="):]
-                # e = int(e)
-                # n = message_string_striped[message_string_striped.find("n=") + len("n="):]
-                # n = n.split(',')[0]
-                # n = int(n)
+                e = message_string_striped[message_string_striped.find("e=") + len("e="):]
+                e = int(e)
+                n = message_string_striped[message_string_striped.find("n=") + len("n="):]
+                n = n.split(',')[0]
+                n = int(n)
 
 
                 # RSA decode
-                n, e, k = RSA.get_n_e_k()
-                packet = get_text_packet_from_message_string("s", f"{n},{e}")
-                s.send(packet)
+                # n, e, k = RSA.get_n_e_k()
+                # packet = get_text_packet_from_message_string("s", f"{n},{e}")
+                # s.send(packet)
 
 
 
@@ -156,16 +156,16 @@ def main():
                 # message_counter = 0
 
                 # RSA encode
-                # encoded_message_bytes = RSA.encode_bytes_message(message_bytes, e, n)
-                # packet = get_text_packet_from_message_bytes("s", encoded_message_bytes)
-                # s.send(packet)
-                # message_counter = 0
-
-                # RSA decode
-                decoded_message_bytes = RSA.decode(message_bytes, n, e, k)
-                packet = get_text_packet_from_message_bytes("s", decoded_message_bytes)
+                encoded_message_bytes = RSA.encode_bytes_message(message_bytes, e, n)
+                packet = get_text_packet_from_message_bytes("s", encoded_message_bytes)
                 s.send(packet)
                 message_counter = 0
+
+                # RSA decode
+                # decoded_message_bytes = RSA.decode(message_bytes, n, e, k)
+                # packet = get_text_packet_from_message_bytes("s", decoded_message_bytes)
+                # s.send(packet)
+                # message_counter = 0
 
 
                 pass

@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>ChatWindow</class>
+ <widget class="QWidget" name="ChatWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>843</width>
+    <height>455</height>
+   </rect>
+  </property>
+  <property name="minimumSize">
+   <size>
+    <width>843</width>
+    <height>455</height>
+   </size>
+  </property>
+  <property name="windowTitle">
+   <string>Chat</string>
+  </property>
+  <layout class="QGridLayout" name="gridLayout">
+   <item row="0" column="0">
+    <widget class="QTabWidget" name="tabWidget">
+     <property name="currentIndex">
+      <number>0</number>
+     </property>
+     <widget class="QWidget" name="publicChatTab">
+      <property name="autoFillBackground">
+       <bool>false</bool>
+      </property>
+      <attribute name="title">
+       <string>Public</string>
+      </attribute>
+      <layout class="QGridLayout" name="gridLayout_2">
+       <item row="0" column="0">
+        <widget class="QTextBrowser" name="publicChatBrowser"/>
+       </item>
+       <item row="3" column="0">
+        <widget class="QLineEdit" name="publicMessageInput">
+         <property name="placeholderText">
+          <string>Message</string>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="0">
+        <widget class="QPushButton" name="sendPublicMessageButton">
+         <property name="text">
+          <string>Send</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="serverChatTab">
+      <property name="enabled">
+       <bool>true</bool>
+      </property>
+      <attribute name="title">
+       <string>Server</string>
+      </attribute>
+      <layout class="QGridLayout" name="gridLayout_3">
+       <item row="0" column="0" colspan="4">
+        <widget class="QTextBrowser" name="serverChatBrowser"/>
+       </item>
+       <item row="2" column="2">
+        <widget class="QLineEdit" name="serverMessage"/>
+       </item>
+       <item row="2" column="0">
+        <widget class="QComboBox" name="comboBox">
+         <property name="currentText">
+          <string/>
+         </property>
+         <property name="placeholderText">
+          <string>Task</string>
+         </property>
+         <item>
+          <property name="text">
+           <string>Shift</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Vigenere</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>RSA</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Fiell hellman</string>
+          </property>
+         </item>
+        </widget>
+       </item>
+       <item row="2" column="1">
+        <widget class="QComboBox" name="comboBox_2">
+         <property name="placeholderText">
+          <string>Type</string>
+         </property>
+         <item>
+          <property name="text">
+           <string>Encode</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Decode</string>
+          </property>
+         </item>
+        </widget>
+       </item>
+       <item row="3" column="0" colspan="3">
+        <widget class="QPushButton" name="sendServerMessageButton">
+         <property name="text">
+          <string>Send</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
