@@ -11,7 +11,7 @@ def get_p():
     Returns the modular word
     :return: Int
     """
-    with open("primes.bin", "rb") as file:
+    with open("../primes.bin", "rb") as file:
         primes = file.readlines()[0]
         primes_array = [primes[i:i + 6] for i in range(0, len(primes), 6)]
         primes_array = [int.from_bytes(prime, "little") for prime in primes_array]

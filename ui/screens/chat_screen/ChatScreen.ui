@@ -23,7 +23,7 @@
    <item row="0" column="0">
     <widget class="QTabWidget" name="tabWidget">
      <property name="currentIndex">
-      <number>1</number>
+      <number>0</number>
      </property>
      <widget class="QWidget" name="publicChatTab">
       <property name="autoFillBackground">
@@ -34,10 +34,10 @@
       </attribute>
       <layout class="QGridLayout" name="gridLayout_2">
        <item row="0" column="0">
-        <widget class="QTextBrowser" name="publicChat"/>
+        <widget class="QTextBrowser" name="publicChatBrowser"/>
        </item>
        <item row="3" column="0">
-        <widget class="QLineEdit" name="publicMessage">
+        <widget class="QLineEdit" name="publicMessageInput">
          <property name="placeholderText">
           <string>Message</string>
          </property>
@@ -61,10 +61,10 @@
       </attribute>
       <layout class="QGridLayout" name="gridLayout_3">
        <item row="0" column="0" colspan="4">
-        <widget class="QTextBrowser" name="serverChat"/>
+        <widget class="QTextBrowser" name="serverChatBrowser"/>
        </item>
        <item row="2" column="2">
-        <widget class="QLineEdit" name="serverMessage"/>
+        <widget class="QLineEdit" name="serverMessageInput"/>
        </item>
        <item row="2" column="0">
         <widget class="QComboBox" name="comboBox">
