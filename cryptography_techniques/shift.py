@@ -121,6 +121,18 @@ def decrypt(message):
     return key_e, message_e, key_space, message_space
 
 
+def server_message_encode(socket, message: bytes, length: int):
+    message_string = message.decode("utf-8")
+    message_string_striped = message_string.replace(chr(0), "")
+    encoding_key = message_string_striped[message_string_striped.find("shift-key ") + len("shift-key "):]
+    print(f"Received key : {encoding_key}")
+
+    message_to_encode = socket.recv(6 + length * 4)
+    encoded_message_bytes = encode_bytes_message(message_to_encode, int(encoding_key))
+    packet = utils.get_text_packet_from_message_bytes("s", encoded_message_bytes)
+    socket.send(packet)
+
+
 if __name__ == '__main__':
     print(decode(encode_string_message("ñ", 1), 1))
     print(decode([b"\x00\xc3\xb4"], 3))

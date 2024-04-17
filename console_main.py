@@ -109,8 +109,8 @@ def main():
                 message_counter += 1
 
                 # Shift and Vigenere key for encoding
-                # encoding_key = message_string_striped[message_string_striped.find("shift-key ") + len("shift-key "):]
-                # print(f"Received key : {encoding_key}")
+                encoding_key = message_string_striped[message_string_striped.find("shift-key ") + len("shift-key "):]
+                print(f"Received key : {encoding_key}")
 
                 # RSA e and n parsing for encoding
                 # e = message_string_striped[message_string_striped.find("e=") + len("e="):]
