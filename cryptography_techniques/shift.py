@@ -17,12 +17,7 @@ def encode_bytes_message(message, key):
     message_4_bytes_array = utils.message_to_4_bytes_array(message)
     for four_bytes in message_4_bytes_array:
         encoded_char_int = int.from_bytes(four_bytes) + key
-
-        print(f"Encoded 4 bytes {four_bytes} ")
-        print(f"Encoded 4 bytes int {int.from_bytes(four_bytes)} ")
-        print(f"Key {key}")
         encoded_char_bytes = encoded_char_int.to_bytes(4, byteorder="big")
-        print(f"Encoded char bytes {encoded_char_bytes}")
 
         res += encoded_char_bytes
 

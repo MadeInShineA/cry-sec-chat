@@ -4,16 +4,18 @@ import traceback
 
 from PyQt6 import uic
 from PyQt6.QtWidgets import QWidget, QTextBrowser, QLineEdit, QPushButton, QComboBox, QMessageBox
-from cryptography_techniques.shift import server_message_encode
 import threading
 
 import utils
+import cryptography_techniques.shift as shift
+import cryptography_techniques.vigenere as vigenere
+import cryptography_techniques.RSA as RSA
 
 TECHNIQUES_MAP = {
-    "Shift" : "shift",
-    "Vigenere" : "vigenere",
-    "RSA" : "RSA",
-    "DifHel" : "DifHel"
+    "Shift": "shift",
+    "Vigenere": "vigenere",
+    "RSA": "RSA",
+    "DifHel": "DifHel"
 }
 
 
@@ -42,7 +44,11 @@ class ChatScreen(QWidget):
         self.load_chat_messages()
         self.load_server_messages()
 
+        self.server_message_technique_box.currentIndexChanged.connect(self.message_technique_on_change)
         self.send_server_message_button.clicked.connect(self.send_server_message)
+
+        self.server_message_count = 0
+        self.server_message = None
 
 
 
@@ -65,7 +71,10 @@ class ChatScreen(QWidget):
                     message = self.socket.recv(length * 4)
                     if message_type == "t":
                         print(f"Received public message bytes: {message}")
-                        message_content = message.decode('utf-8')
+                        try:
+                            message_content = message.decode('utf-8')
+                        except UnicodeDecodeError as e:
+                            message_content = message.decode('utf-32be')
                         message_datetime = datetime.datetime.now().strftime("%d/%m/%Y %H:%M")
                         self.public_chat_message_browser.append(f"{message_datetime} : {message_content}")
                         with open("public_messages.json", "r+") as f:
@@ -82,8 +91,21 @@ class ChatScreen(QWidget):
                                 json.dump({"datetime": message_datetime, "content": message_content}, f, indent=0)
                                 f.write("\n]")
                     elif message_type == "s":
-                        # print(f"Received server message bytes: {message}")
-                        message_content = message.decode('utf-8')
+
+                        self.server_message = message
+                        self.server_message_count += 1
+                        print(f"Server message count : {self.server_message_count}")
+
+
+                        print(f"Received server message bytes: {message}")
+                        try:
+                            try:
+                                message_content = message.decode('utf-8')
+                            except UnicodeDecodeError as e:
+                                message_content = message.decode('utf-32be')
+                        except Exception as e:
+                            message_content = "👻"
+
                         message_datetime = datetime.datetime.now().strftime("%d/%m/%Y %H:%M")
 
                         self.server_chat_message_browser.append(f"{message_datetime} : {message_content}")
@@ -135,22 +157,105 @@ class ChatScreen(QWidget):
             if not message_technique:
                 QMessageBox.critical(self, "Server message Error", "Please select a technique")
                 return
-            elif message_technique != "DifHel":
+            if message_technique == "DifHel":
+                message = f"task {TECHNIQUES_MAP[message_technique]}"
+            else:
                 if not message_operation:
                     QMessageBox.critical(self, "Server message Error", "Please select an operation")
                     return
-                elif not message_length:
+                elif not message_length or not message_length.isdigit():
                     QMessageBox.critical(self, "Server message Error", "Please enter a length")
                     return
+                else:
+                    message = f"task {TECHNIQUES_MAP[message_technique]} {message_operation.lower()} {message_length}"
 
-            message = f"task {TECHNIQUES_MAP[message_technique]} {str.lower(message_operation)} {message_length}"
+            if message_technique == "Vigenere" and message_operation == "Decode":
+                QMessageBox.critical(self, "Server message Error", "Vigenere decoding is currently not supported")
+                return
             print(f"Sending server message : {message}")
             packet = utils.get_text_packet_from_message_string("s", message)
+            print(f"Packet: {packet}")
             self.socket.send(packet)
+
+            self.server_message_count = 0
+
+            if message_technique == "Shift" or message_technique == "Vigenere":
+                if message_operation == "Encode":
+                    while self.server_message_count != 1:
+                        pass
+
+                    message_string = self.server_message.decode("utf-8")
+                    message_string_striped = message_string.replace(chr(0), "")
+                    print(f"Received message : {message_string_striped}")
+                    encoding_key = message_string_striped[
+                                   message_string_striped.find("shift-key ") + len("shift-key "):]
+                    print(f"Received key : {encoding_key}")
+
+                    while self.server_message_count != 2:
+                        pass
+
+                    message_to_encode = self.server_message
+
+                    if message_technique == "Shift":
+                        encoded_message_bytes = shift.encode_bytes_message(message_to_encode, int(encoding_key))
+                    else:
+                        encoded_message_bytes = vigenere.encode_bytes_message(message_to_encode, encoding_key)
+                    packet = utils.get_text_packet_from_message_bytes("s", encoded_message_bytes)
+                    self.socket.send(packet)
+                elif message_operation == "Decode":
+                    if message_technique == "Shift":
+                        while self.server_message_count != 2:
+                            pass
+                        key_e, decrypted_message_e, key_space, decrypted_message_space = shift.decrypt(self.server_message)
+                        print(f"Decrypted message e : {decrypted_message_e}")
+                        print(f"Decrypted message space : {decrypted_message_space}")
+                        if decrypted_message_e != "":
+                            self.socket.send(utils.get_text_packet_from_message_string("s", str(key_e)))
+                        elif decrypted_message_space != "":
+                            self.socket.send(utils.get_text_packet_from_message_string("s", str(key_space)))
+            elif message_technique == "RSA":
+                if message_operation == "Encode":
+                    while self.server_message_count != 1:
+                        pass
+
+                    message_string = self.server_message.decode("utf-8")
+                    message_string_striped = message_string.replace(chr(0), "")
+
+                    e = int(message_string_striped[message_string_striped.find("e=") + len("e="):])
+                    n = message_string_striped[message_string_striped.find("n=") + len("n="):]
+                    n = n.split(',')[0]
+                    n = int(n)
+
+                    while self.server_message_count != 2:
+                        pass
+
+                    encoded_message_bytes = RSA.encode_bytes_message(self.server_message, e, n)
+                    packet = utils.get_text_packet_from_message_bytes("s", encoded_message_bytes)
+                    self.socket.send(packet)
+                elif message_operation == "Decode":
+                    while self.server_message_count != 1:
+                        pass
+                    n, e, k = RSA.get_n_e_k()
+                    print(f"Generated n : {n}, e : {e}, k : {k}")
+                    packet = utils.get_text_packet_from_message_string("s", f"{n},{e}")
+                    self.socket.send(packet)
+
+                    while self.server_message_count != 2:
+                        pass
+                    decoded_message_bytes = RSA.decode(self.server_message, n, e, k)
+                    packet = utils.get_text_packet_from_message_bytes("s", decoded_message_bytes)
+                    self.socket.send(packet)
 
         except Exception as e:
             print(traceback.format_exc())
 
+    def message_technique_on_change(self):
+        if self.server_message_technique_box.currentText() == "DifHel":
+            self.server_message_operation_box.setEnabled(False)
+            self.server_message_input.setEnabled(False)
+        else:
+            self.server_message_operation_box.setEnabled(True)
+            self.server_message_input.setEnabled(True)
 
 
 
