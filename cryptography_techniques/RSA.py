@@ -37,7 +37,7 @@ def store_primes():
     """
     max_value = int(math.pow(2, 32))
     prime_numbers = get_primes(max_value)
-    with open("../primes.bin", "wb") as file:
+    with open("primes.bin", "wb") as file:
         for prime in prime_numbers:
             prime_bytes = prime.tobytes()
             stripped_prime_bytes = prime_bytes[:PRIME_BYTE_SIZE]
@@ -67,7 +67,7 @@ def get_n_e_k():
     :return n: int
     :return e: int
     """
-    with open("../primes.bin", "rb") as file:
+    with open("primes.bin", "rb") as file:
         primes = file.readlines()[0]
         primes_array = [primes[i:i+6] for i in range(0, len(primes), 6)]
         primes_array = [int.from_bytes(prime, "little") for prime in primes_array]
