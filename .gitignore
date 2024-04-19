@@ -1,5 +1,7 @@
 /venv/
 /.idea/
 /.idea/cry-sec-chat.iml
-/primes.txt
-/primes.bin
+/primes_to_2_32.txt
+/primes_to_2_32.bin
+/primes_to_5000.bin
+/primes_to_5000.txt

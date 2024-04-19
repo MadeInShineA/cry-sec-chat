@@ -24,6 +24,5 @@ def encode_bytes_message(message, key):
     return res
 
 
-
 if __name__ == '__main__':
     pass

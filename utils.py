@@ -1,10 +1,15 @@
+import math
 from socket import *
+
+import numpy as np
 from PIL import Image
 
 
 SERVER_ADDRESS = "vlbelintrocrypto.hevs.ch"
 SERVER_PORT = 6000
 MAGIC_BYTES = "ISC".encode("utf-8")
+PRIME_BYTE_SIZE = 6
+
 
 def message_to_4_bytes_array(message):
     """
@@ -110,3 +115,69 @@ def split_received_message(message):
         return header, message_type, length, message_bytes
     except Exception as e:
         print(f"Erreur lors du décodage du message {message} \n {e}")
+
+def modular_pow(base, exponent, modulo):
+    """
+
+    :param base: int
+    :param exponent: int
+    :param modulo: int
+    :return: int
+    """
+    if modulo == 1:
+        return 0
+    base = base % modulo
+    result = 1
+    while exponent > 0:
+        if exponent % 2 == 1:
+            result = (result * base) % modulo
+        exponent = exponent >> 1
+        base = (base * base) % modulo
+    return result
+
+def store_primes(   ):
+    """
+    Store primes number between 1 to n number in a .bin file
+    The bytes are stored in little endian
+
+    :return: none
+    """
+    max_value = int(math.pow(2, 32))
+    prime_numbers = get_primes(max_value)
+    with open("primes_to_2_32.bin", "wb") as file:
+        for prime in prime_numbers:
+            prime_bytes = prime.tobytes()
+            stripped_prime_bytes = prime_bytes[:PRIME_BYTE_SIZE]
+
+            # Warning, the bytes are stored in little endian
+            file.write(stripped_prime_bytes)
+
+
+def get_primes(n):
+    """
+    Returns an array of primes from 1 to 2^n
+    :param n: int
+    :return: array
+    """
+    sieve = np.ones(n // 3 + (n % 6 == 2), dtype=bool)
+    for i in range(1, int(n ** 0.5) // 3 + 1):
+        if sieve[i]:
+            k = 3 * i + 1 | 1
+            sieve[k * k // 3::2 * k] = False
+            sieve[k * (k - 2 * (i & 1) + 4) // 3::2 * k] = False
+    return np.r_[2, 3, ((3 * np.nonzero(sieve)[0][1:] + 1) | 1)]
+
+
+if __name__ == '__main__':
+    with open("primes_to_5000.txt", "r") as file:
+        primes = file.readlines()
+        primes_array = [int(prime) for prime in primes]
+        file.close()
+    print(primes_array)
+    with open("primes_to_5000.bin", "wb") as file:
+        for prime in primes_array:
+            prime_bytes = prime.to_bytes(PRIME_BYTE_SIZE, "little")
+            stripped_prime_bytes = prime_bytes[:PRIME_BYTE_SIZE]
+
+            # Warning, the bytes are stored in little endian
+            file.write(stripped_prime_bytes)

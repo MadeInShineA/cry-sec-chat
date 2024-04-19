@@ -10,6 +10,7 @@ import utils
 import cryptography_techniques.shift as shift
 import cryptography_techniques.vigenere as vigenere
 import cryptography_techniques.rsa as RSA
+import cryptography_techniques.difhel as difhel
 
 TECHNIQUES_MAP = {
     "Shift": "shift",
@@ -118,7 +119,6 @@ class ChatScreen(QWidget):
 
             self.server_message = message
             self.server_message_count += 1
-            print(f"Server message count : {self.server_message_count}")
 
             print(f"Received server message bytes: {message}")
             try:
@@ -185,8 +185,8 @@ class ChatScreen(QWidget):
                 if not message_operation:
                     QMessageBox.critical(self, "Server message Error", "Please select an operation")
                     return
-                elif not message_length or not message_length.isdigit():
-                    QMessageBox.critical(self, "Server message Error", "Please enter a length")
+                elif not message_length or not message_length.isdigit() or not int(message_length) > 0 or not int(message_length) < 10000:
+                    QMessageBox.critical(self, "Server message Error", "Please enter a valide length (0 < length < 10000)")
                     return
                 else:
                     message = f"task {TECHNIQUES_MAP[message_technique]} {message_operation.lower()} {message_length}"
@@ -269,6 +269,33 @@ class ChatScreen(QWidget):
                     decoded_message_bytes = RSA.decode(self.server_message, n, e, k)
                     packet = utils.get_text_packet_from_message_bytes("s", decoded_message_bytes)
                     self.socket.send(packet)
+            elif message_technique == "DifHel":
+                p, g = difhel.get_p_g()
+                print(f"Generated p : {p}, g : {g}")
+                packet = utils.get_text_packet_from_message_string("s", f"{p},{g}")
+                self.socket.send(packet)
+                while self.server_message_count != 3:
+                    pass
+
+                message_string = self.server_message.decode("utf-8")
+                message_string_striped = message_string.replace(chr(0), "")
+                server_half_key = int(message_string_striped)
+                print(f"Received server half key : {server_half_key}")
+
+                b, half_key = difhel.get_half_key(p, g)
+                print(f"Generated half key : {half_key}")
+
+                packet = utils.get_text_packet_from_message_string("s", str(half_key))
+                self.socket.send(packet)
+
+                while self.server_message_count != 4:
+                    pass
+
+                shared_key = difhel.get_shared_key(server_half_key, b, p)
+                print(f"Computed shared key : {shared_key}")
+                packet = utils.get_text_packet_from_message_string("s", str(shared_key))
+                self.socket.send(packet)
+
 
         except Exception as e:
             print(traceback.format_exc())
