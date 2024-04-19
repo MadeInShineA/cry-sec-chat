@@ -2,7 +2,7 @@ from socket import *
 import inspect
 from PIL import Image
 
-from cryptography_techniques import RSA
+from cryptography_techniques import rsa
 from utils import *
 
 # from skimage.transform import resize

@@ -9,7 +9,7 @@ import threading
 import utils
 import cryptography_techniques.shift as shift
 import cryptography_techniques.vigenere as vigenere
-import cryptography_techniques.RSA as RSA
+import cryptography_techniques.rsa as RSA
 
 TECHNIQUES_MAP = {
     "Shift": "shift",
@@ -49,6 +49,9 @@ class ChatScreen(QWidget):
 
         self.server_message_count = 0
         self.server_message = None
+        self.processing_message = False
+        self.message_queue = []
+        self.queued_message = None
 
 
 
@@ -65,67 +68,86 @@ class ChatScreen(QWidget):
         try:
             while True:
                 message = self.socket.recv(6)
-                if message:
-                    header, message_type, length = utils.get_header_message_type_lenght_from_message(message)
-                    print(f"Header: {header}, Message type: {message_type}, Length: {length}")
-                    message = self.socket.recv(length * 4)
-                    if message_type == "t":
-                        print(f"Received public message bytes: {message}")
-                        try:
-                            message_content = message.decode('utf-8')
-                        except UnicodeDecodeError as e:
-                            message_content = message.decode('utf-32be')
-                        message_datetime = datetime.datetime.now().strftime("%d/%m/%Y %H:%M")
-                        self.public_chat_message_browser.append(f"{message_datetime} : {message_content}")
-                        with open("public_messages.json", "r+") as f:
-                            f.seek(0, 2)
-                            f.seek(f.tell() - 2, 0)
-                            if f.read(1) == "[":
-                                f.seek(f.tell() - 1, 0)
-                                f.write("[\n")
-                                json.dump({"datetime": message_datetime, "content": message_content}, f, indent=0)
-                                f.write("\n]")
-                            else:
-                                f.seek(f.tell() - 2, 0)
-                                f.write(",\n")
-                                json.dump({"datetime": message_datetime, "content": message_content}, f, indent=0)
-                                f.write("\n]")
-                    elif message_type == "s":
-
-                        self.server_message = message
-                        self.server_message_count += 1
-                        print(f"Server message count : {self.server_message_count}")
+                if message and not self.processing_message:
+                    print("Processing received message")
+                    self.process_message(message)
+                elif message:
+                    self.message_queue.append(message)
+                    print("Message queued")
+                elif len(self.message_queue) > 0 and not self.processing_message:
+                    self.queued_message = self.message_queue.pop(0)
+                    print("Processing queued message")
+                    self.process_message(self.queued_message)
 
 
-                        print(f"Received server message bytes: {message}")
-                        try:
-                            try:
-                                message_content = message.decode('utf-8')
-                            except UnicodeDecodeError as e:
-                                message_content = message.decode('utf-32be')
-                        except Exception as e:
-                            message_content = "👻"
-
-                        message_datetime = datetime.datetime.now().strftime("%d/%m/%Y %H:%M")
-
-                        self.server_chat_message_browser.append(f"{message_datetime} : {message_content}")
-
-                        with open("server_messages.json", "r+") as f:
-                            f.seek(0, 2)
-                            f.seek(f.tell() - 2, 0)
-                            if f.read(1) == "[":
-                                f.seek(f.tell() - 1, 0)
-                                f.write("[\n")
-                                json.dump({"datetime": message_datetime, "content": message_content}, f, indent=0)
-                                f.write("\n]")
-                            else:
-                                f.seek(f.tell() - 2, 0)
-                                f.write(",\n")
-                                json.dump({"datetime": message_datetime, "content": message_content}, f, indent=0)
-                                f.write("\n]")
 
         except Exception as e:
             print(traceback.format_exc())
+
+    def process_message(self, message):
+        self.processing_message = True
+        header, message_type, length = utils.get_header_message_type_lenght_from_message(message)
+        print(f"Header: {header}, Message type: {message_type}, Length: {length}")
+        message = self.socket.recv(length * 4)
+        if message_type == "t":
+            print(f"Received public message bytes: {message}")
+            try:
+                try:
+                    message_content = message.decode('utf-8')
+                except UnicodeDecodeError as e:
+                    message_content = message.decode('utf-32be')
+            except Exception as e:
+                message_content = "⚠️ The message couldn't be displayed ⚠️"
+            message_datetime = datetime.datetime.now().strftime("%d/%m/%Y %H:%M")
+            self.public_chat_message_browser.append(f"{message_datetime} : {message_content}")
+            with open("public_messages.json", "r+") as f:
+                f.seek(0, 2)
+                f.seek(f.tell() - 2, 0)
+                if f.read(1) == "[":
+                    f.seek(f.tell() - 1, 0)
+                    f.write("[\n")
+                    json.dump({"datetime": message_datetime, "content": message_content}, f, indent=0)
+                    f.write("\n]")
+                else:
+                    f.seek(f.tell() - 2, 0)
+                    f.write(",\n")
+                    json.dump({"datetime": message_datetime, "content": message_content}, f, indent=0)
+                    f.write("\n]")
+            print("Finished processing public message")
+        elif message_type == "s":
+
+            self.server_message = message
+            self.server_message_count += 1
+            print(f"Server message count : {self.server_message_count}")
+
+            print(f"Received server message bytes: {message}")
+            try:
+                try:
+                    message_content = message.decode('utf-8')
+                except UnicodeDecodeError as e:
+                    message_content = message.decode('utf-32be')
+            except Exception as e:
+                message_content = "⚠️ The message couldn't be displayed ⚠️"
+
+            message_datetime = datetime.datetime.now().strftime("%d/%m/%Y %H:%M")
+
+            self.server_chat_message_browser.append(f"{message_datetime} : {message_content}")
+
+            with open("server_messages.json", "r+") as f:
+                f.seek(0, 2)
+                f.seek(f.tell() - 2, 0)
+                if f.read(1) == "[":
+                    f.seek(f.tell() - 1, 0)
+                    f.write("[\n")
+                    json.dump({"datetime": message_datetime, "content": message_content}, f, indent=0)
+                    f.write("\n]")
+                else:
+                    f.seek(f.tell() - 2, 0)
+                    f.write(",\n")
+                    json.dump({"datetime": message_datetime, "content": message_content}, f, indent=0)
+                    f.write("\n]")
+            print("Finished processing server message")
+        self.processing_message = False
 
 
     def load_chat_messages(self):
@@ -210,8 +232,10 @@ class ChatScreen(QWidget):
                         print(f"Decrypted message e : {decrypted_message_e}")
                         print(f"Decrypted message space : {decrypted_message_space}")
                         if decrypted_message_e != "":
+                            self.server_chat_message_browser.append(f"Decoded message : {decrypted_message_e}")
                             self.socket.send(utils.get_text_packet_from_message_string("s", str(key_e)))
                         elif decrypted_message_space != "":
+                            self.server_chat_message_browser.append(f"Decoded message : {decrypted_message_space}")
                             self.socket.send(utils.get_text_packet_from_message_string("s", str(key_space)))
             elif message_technique == "RSA":
                 if message_operation == "Encode":
