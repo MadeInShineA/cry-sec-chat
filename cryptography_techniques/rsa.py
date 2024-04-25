@@ -30,7 +30,7 @@ def get_n_e_k():
 
         e = primes_array[random.randint(0, p_index - 1)]
         while math.gcd(e, k) != 1:
-            e = int(primes_array[random.randint(0, p_index)])
+            e = int(primes_array[random.randint(0, p_index - 1)])
 
         file.close()
 
